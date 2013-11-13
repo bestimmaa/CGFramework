@@ -79,7 +79,7 @@ void Draw(void)
     int now = glutGet(GLUT_ELAPSED_TIME);
 
     // Rotation
-    // float rotation = now*0.001;
+    float rotation = now*0.001;
 
 
     //////////////////////////////////////////////////////////////////////////
@@ -117,10 +117,54 @@ void Draw(void)
         glDrawElements(GL_TRIANGLES, mesh->getTriangles().size()*3, GL_UNSIGNED_INT, 0);
 
     }
+    
+    ModelViewMatrixStack.push();
+    {
+        ModelViewMatrixStack.rotate(0, rotation, 0);
+        ModelViewMatrixStack.translate(2, 0, 0);
+        ModelViewMatrixStack.scale(0.3);
+        
+        // transfer ModelViewMatrix for Geometry 1 to Shaders
+        glUniformMatrix4fv(ModelViewMatrixUniformLocation, 1, GL_FALSE, ModelViewMatrixStack.top().data());
+        
+        //set the NormalMatrix for Geometry 1
+        normalMatrix = ModelViewMatrixStack.top();
+        normalMatrix.invert();
+        normalMatrix.transpose();
+        
+        // transfer NormalMatrix for Geometry 1 to Shaders
+        glUniformMatrix4fv(NormalMatrixUniformLocation, 1, GL_FALSE, normalMatrix.data());
+        
+        // draw Geometry 1
+        glDrawElements(GL_TRIANGLES, mesh->getTriangles().size()*3, GL_UNSIGNED_INT, 0);
+        
+    }
+    
+    ModelViewMatrixStack.push();
+    {
+        ModelViewMatrixStack.rotate(0, rotation*0.34, 0);
+        ModelViewMatrixStack.translate(2, 0, 0);
+        ModelViewMatrixStack.scale(0.3);
+        
+        // transfer ModelViewMatrix for Geometry 1 to Shaders
+        glUniformMatrix4fv(ModelViewMatrixUniformLocation, 1, GL_FALSE, ModelViewMatrixStack.top().data());
+        
+        //set the NormalMatrix for Geometry 1
+        normalMatrix = ModelViewMatrixStack.top();
+        normalMatrix.invert();
+        normalMatrix.transpose();
+        
+        // transfer NormalMatrix for Geometry 1 to Shaders
+        glUniformMatrix4fv(NormalMatrixUniformLocation, 1, GL_FALSE, normalMatrix.data());
+        
+        // draw Geometry 1
+        glDrawElements(GL_TRIANGLES, mesh->getTriangles().size()*3, GL_UNSIGNED_INT, 0);
+        
+    }
 
     //load last transformation from stack
     ModelViewMatrixStack.pop();
-
+    ModelViewMatrixStack.pop();
     glBindVertexArray(0);
     glUseProgram(0);
 }
