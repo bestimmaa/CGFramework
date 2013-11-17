@@ -17,7 +17,7 @@ uniform mat4 NormalMatrix;
 
 void main(void)
 {
-	//Calculate the final vertex position
+	//Calculate the final vertex position in clipping space
 	gl_Position = (ProjectionMatrix * ModelViewMatrix) * vec4(in_Position,1.0);
     //Transform the normal and pass it to the fragment shader
 	normal      = normalize(NormalMatrix * vec4(in_Normal, 0.0));

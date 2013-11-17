@@ -18,7 +18,7 @@ void main(void)
     
     vec3 vertexToLightVector =  normalize(lightPosition - position.xyz);
     vec3 normalizedNormal = normalize(normal.xyz);
-    vec3 eyeToVertexVector = normalize(-reflect(vertexToLightVector,normalizedNormal));
+    vec3 reflected = normalize(-reflect(vertexToLightVector,normalizedNormal));
     vec3 eye = normalize(-vec3(position.xyz));
     
     int phongReflectionRadius = 90; // radius of the phong reflections
@@ -31,7 +31,7 @@ void main(void)
     
     
     float shininess = 5;
-    float specularFactor = pow(max(dot(eyeToVertexVector,eye),0.0),shininess);
+    float specularFactor = pow(max(dot(reflected,eye),0.0),shininess);
     vec4 specularTerm = specularFactor * baseColor;
     
     out_Color = ambientTerm+diffuseTerm+specularTerm;
