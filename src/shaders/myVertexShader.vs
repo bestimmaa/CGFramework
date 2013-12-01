@@ -30,9 +30,6 @@ uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
 uniform vec4 LightPosition;
 
-
-
-
 void main(void)
 {
 
@@ -57,10 +54,10 @@ void main(void)
     vec3 normal_cameraspace = mat3(ModelViewMatrix)*normalize(in_Normal);
     vec3 tangent_cameraspace = mat3(ModelViewMatrix)*normalize(in_Tangent);
     vec3 bitangent_cameraspace = mat3(ModelViewMatrix)*normalize(in_Bitangent);
+    // matrix for transform to tangentspace
     mat3 TBN = transpose(mat3(tangent_cameraspace,bitangent_cameraspace,normal_cameraspace));
-    debug = bitangent_cameraspace;
     light_direction_tangentspace = vec4(TBN * vec3(light_direction_cameraspace.xyz),0);
     eye_direction_tangentspace = vec4(TBN * vec3(eye_direction_cameraspace.xyz),0);
     light_position_worldspace = LightPosition.xyz;
-    
+    debug = light_direction_tangentspace.xyz;
 }

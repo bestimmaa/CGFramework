@@ -1389,35 +1389,65 @@ Mesh::generateTangentsBitangents() {
     _bitangents.clear();
     normalizeNormals();
     
-    for(int i = 0; i < _vertices.size(); ++i){
-        gloost::Point3 &v0 = _vertices[i+0];
-        gloost::Point3 &v1 = _vertices[i+1];
-        gloost::Point3 &v2 = _vertices[i+2];
+    std::vector<gloost::Vector3> tan1(_vertices.size());
+    std::vector<gloost::Vector3> tan2(_vertices.size());
+    gloost::Vector3 tangent;
+    gloost::Vector3 bitangent;
+    
+    for(int i = 0; i < this->getTriangles().size(); ++i){
         
-
+        int i1 = getTriangles().operator[](i).vertexIndices[0];
+        int i2 = getTriangles().operator[](i).vertexIndices[1];
+        int i3 = getTriangles().operator[](i).vertexIndices[2];
         
-        // third component is zero for 2D textures
-        gloost::Point3 &uv0 = _texCoords[i+0];
-        gloost::Point3 &uv1 = _texCoords[i+1];
-        gloost::Point3 &uv2 = _texCoords[i+2];
+        gloost::Point3 v1 = _vertices[i1];
+        gloost::Point3 v2 = _vertices[i2];
+        gloost::Point3 v3 = _vertices[i3];
         
-
+        gloost::Point3 w1 = _texCoords[i1];
+        gloost::Point3 w2 = _texCoords[i2];
+        gloost::Point3 w3 = _texCoords[i3];
         
-        gloost::Vector3 deltaPos1 = v1-v0;
-        gloost::Vector3 deltaPos2 = v2-v0;
+        float x1 = v2[0] - v1[0]; float x2 = v3[0] - v1[0]; float y1 = v2[1] - v1[1]; float y2 = v3[1] - v1[1]; float z1 = v2[2] - v1[2]; float z2 = v3[2] - v1[2];
         
         
-        gloost::Vector2 deltaUV1 = gloost::Vector2(uv1[0]-uv0[0],uv1[1]-uv0[1]);
-        gloost::Vector2 deltaUV2 = gloost::Vector2(uv2[0]-uv0[0],uv2[1]-uv0[1]);;
+        float s1 = w2[0] - w1[0]; float s2 = w3[0] - w1[0]; float t1 = w2[1] - w1[1]; float t2 = w3[1] - w1[1];
         
-        // meh
-        float r = 1.0f / (deltaUV1[0] * deltaUV2[1]- deltaUV1[1]*deltaUV2[0]);
+        float r = 1.0F / (s1 * t2 - s2 * t1);
         
-        gloost::Vector3 tangent = (deltaPos1*deltaUV2[1]-deltaPos2*deltaUV1[1])*r;
-        gloost::Vector3 bitangent = (deltaPos2 * deltaUV1[0] - deltaPos1 * deltaUV2[0])*r;
+        gloost::Vector3 sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
+                             (t2 * z1 - t1 * z2) * r);
+        gloost::Vector3 tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
+             (s1 * z2 - s2 * z1) * r);
+        
+        tan1[i1] += sdir;
+        tan1[i2] += sdir;
+        tan1[i3] += sdir;
+        tan2[i1] += tdir;
+        tan2[i2] += tdir;
+        tan2[i3] += tdir;
+        
+        
+    }
+    
+    for (int a = 0; a < _vertices.size(); ++a){
+        gloost::Vector3 &n = _normals[a];
+        gloost::Vector3 &t = tan1[a];
+        
+        tangent = (t-n*(n*t));
+        tangent[3] = ((gloost::cross(n,t)*tan2[a])<0.0f) ? -1.0f : 1.0f;
+        tangent.normalize();
+        
+        //std::cout<<"tangent "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2]<<std::endl;
         
         _tangents.push_back(tangent);
+        
+        bitangent = (gloost::cross(_normals[a], tangent)*tangent[3]);
+
         _bitangents.push_back(bitangent);
+        
+
+        
     }
     
     std::cout<<"generated "<<_tangents.size() << " tangents and " << _bitangents.size() << " bitangents" << std::endl;

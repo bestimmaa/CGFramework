@@ -41,12 +41,15 @@ unsigned ModelViewMatrixUniformLocation  = 0;
 unsigned NormalMatrixUniformLocation     = 0;
 unsigned textureUniformLocation1         = 0;		//Uniform Texture
 unsigned NormalMapUniformLocation = 0; // Normal map
+unsigned GlossMapUniformLocation = 0;
 unsigned MVP3UniformLocation = 0; // A crippled 3x3 version of the model view matrix without the translation part
 unsigned LightPositionUniformLocation = 0;
 
 Texture* g_texture1 = 0;
 Texture* g_texture2 = 0;
 Texture* normal_texture_earth = 0;
+Texture* gloss_texture_earth = 0;
+
 
 unsigned BufferIds[6] = { 0u };
 unsigned ShaderIds[3] = { 0u };
@@ -114,7 +117,7 @@ void Draw(void)
     gloost::Matrix viewMatrix = ModelViewMatrixStack.top();
     // ATTENTION we use the modelviewmatrix
     glUniformMatrix4fv(ViewMatrixUniformLocation, 1, GL_FALSE, ModelViewMatrixStack.top().data());
-    glUniform4f(LightPositionUniformLocation,0,100,10,0);
+    glUniform4f(LightPositionUniformLocation,20,30,10,1);
 
     gloost::Matrix normalMatrix;
 
@@ -151,6 +154,8 @@ void Draw(void)
         glBindVertexArray(BufferIds[0]);
         
         g_texture1->bind();
+        //gloss_texture_earth->bind();
+        //normal_texture_earth->bind();
 
         // draw Geometry 1
         glDrawElements(GL_TRIANGLES, mesh->getTriangles().size()*3, GL_UNSIGNED_INT, 0);
@@ -221,6 +226,7 @@ void SetupShader()
     NormalMatrixUniformLocation     = glGetUniformLocation(ShaderIds[0], "NormalMatrix");
     textureUniformLocation1         = glGetUniformLocation(ShaderIds[0], "colorMap");
     NormalMapUniformLocation = glGetUniformLocation(ShaderIds[0],"NormalMap");
+    GlossMapUniformLocation = glGetUniformLocation(ShaderIds[0],"glossMap");
     LightPositionUniformLocation = glGetUniformLocation(ShaderIds[0],"LightPosition");
     CheckErrorsGL("AFTER\nXXXXXXXXXXXXX\n");
 
@@ -492,4 +498,5 @@ void Initialize(int argc, char* argv[])
     //Load jpg as texture
 	g_texture1 = new Texture("earth.jpg");
     normal_texture_earth = new Texture("earth_normalmap.jpg");
+    gloss_texture_earth = new Texture("earth_glossmap.jpg");
 }

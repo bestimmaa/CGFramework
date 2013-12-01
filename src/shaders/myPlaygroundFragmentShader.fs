@@ -2,6 +2,7 @@
 
 uniform sampler2D colorMap;
 uniform sampler2D normalMap;
+uniform sampler2D glossMap;
 
 in  vec4 normal;
 in  vec4 vertexPosition;
@@ -20,85 +21,33 @@ out vec4 out_Color;
 
 void main(void)
 {
+    vec3 LightColor = vec3(1,1,1);
+	float LightPower = 300;
     
-    // compute derivations of the world position
-    vec3 p_dx = dFdx(vertexPosition_worldspace);
-    vec3 p_dy = dFdy(vertexPosition_worldspace);
-    // compute derivations of the texture coordinate
-    vec2 tc_dx = dFdx(texcoord);
-    vec2 tc_dy = dFdy(texcoord);
-    // compute initial tangent and bi-tangent
-    vec3 t = normalize( tc_dy.y * p_dx - tc_dx.y * p_dy );
-    vec3 b = normalize( tc_dy.x * p_dx - tc_dx.x * p_dy ); // sign inversion
-    // get new tangent from a given mesh normal
-    vec3 norm = normalize(vec3(normal.xyz));
-    vec3 x = cross(norm, t);
-    t = cross(x, norm);
-    t = normalize(t);
-    // get updated bi-tangent
-    x = cross(b, norm);
-    b = cross(norm, x);
-    b = normalize(b);
-    mat3 tbn = mat3(t, b, norm);
-
-    
-    
-    vec3 color = texture(colorMap, texcoord).rgb;
-	vec3 LightColor = vec3(1,1,1);
-
-	float LightPower = 40.0;
-
-    // Material properties
-	vec3 MaterialDiffuseColor = texture( colorMap, texcoord ).rgb;
+    vec3 MaterialDiffuseColor = texture( colorMap, texcoord ).rgb;
 	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
-	vec3 MaterialSpecularColor = vec3(1,1,1) * 0.3;
-    vec2 normalXY = vec2(texture(normalMap,texcoord).rg * 2.0f -1.0f);
-    vec3 normalFromMap = normalize(texture(normalMap, texcoord).rgb* 2.0 - 1.0);
-    vec3 correctNormal = vec3(tbn * normalFromMap);
-    vec3 combinedNormal = normalize(correctNormal);
-
-    vec3 lightDirection = normalize(light_direction_cameraspace.xyz);
-    float NdotL = max(dot(lightDirection, combinedNormal), 0.0);
-    //specular term
-    float specular = 0.3;
-    float I_n = 1.0f;
-    //Blinn-Phong coefficients
-    float I_a = 0.3f;
-    float I_p = 1.0f;
-    float I_d = 0.3f;
-    float k_a = 0.3f;
-    float k_d = 1.0f;
-    float k_s = 0.8f;
-    float m   = 50;
+	vec3 MaterialSpecularColor = texture( glossMap, texcoord ).rgb * 0.3;
     
-    if(NdotL > 0.0)
-    {
-        //determine viewdirection
-        vec3 viewDir = normalize(-eye_direction_cameraspace.xyz);
-
-        // half direction as approximation
-        vec3 H = normalize(light_direction_cameraspace.xyz + viewDir);
-        vec3 H2 = normalize(H*combinedNormal);
-        vec3 halfDir = normalize(light_direction_cameraspace.xyz + viewDir);
-        
-        //angle of specular light
-        float specAngle = max(dot(halfDir, combinedNormal), 0.0);
-        
-        //smooth and large specular area
-        specular = pow(specAngle, m);
-    }
+    vec3 TextureNormal_tangentspace = normalize(texture( normalMap, vec2(texcoord.x,-texcoord.y) ).rgb*2.0 - 1.0);
+    float distance = length( light_position_worldspace - vertexPosition_worldspace );
     
-    //lookup of texture color at uv-position "texCoords"
-    vec4 textureColor = vec4(texture(colorMap, texcoord).xyz, 0.2f ) ;
+    vec3 n = TextureNormal_tangentspace;
+    vec3 l = normalize(light_direction_tangentspace.xyz);
     
-    vec4 I_ambient = textureColor*k_a;
-    vec4 I_diffus = k_d*NdotL*textureColor;
-    //vec4 I_specular = textureColor*k_s*;
+    float cosTheta = clamp( dot( n,l ), 0,1 );
+	vec3 E = normalize(eye_direction_tangentspace.xyz);
+    vec3 R = reflect(-l,n);
     
-    //blend texture colors
-    out_Color = I_ambient;
-    out_Color += I_diffus;
-    //out_Color += I_specular;
+    float cosAlpha = clamp( dot( E,R ), 0,1 );
     
+    vec3 color;
+    
+    color   += MaterialAmbientColor;
+    // Diffuse : "color" of the object
+    color  += MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);
+    // Specular : reflective highlight, like a mirror
+    color  += MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
+    
+    out_Color = vec4(MaterialSpecularColor,1);
 
 }

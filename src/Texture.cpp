@@ -65,7 +65,7 @@ Texture::Texture(const std::string& filename):
 	std::cout << std::endl << "      handle: " << _handle;
 	//std::cout << std::endl << "      data:   " << FreeImage_GetBits(_bitmap);
 	
-
+    this->unbind();
 }
 
 void Texture::bind() const{
