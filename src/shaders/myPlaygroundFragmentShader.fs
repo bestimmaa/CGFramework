@@ -22,13 +22,13 @@ out vec4 out_Color;
 void main(void)
 {
     vec3 LightColor = vec3(1,1,1);
-	float LightPower = 300;
+	float LightPower = 500;
     
     vec3 MaterialDiffuseColor = texture( colorMap, texcoord ).rgb;
 	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
 	vec3 MaterialSpecularColor = texture( glossMap, texcoord ).rgb * 0.3;
     
-    vec3 TextureNormal_tangentspace = normalize(texture( normalMap, vec2(texcoord.x,-texcoord.y) ).rgb*2.0 - 1.0);
+    vec3 TextureNormal_tangentspace = normalize(texture( normalMap, vec2(texcoord.x,texcoord.y) ).rgb*2.0 - 1.0);
     float distance = length( light_position_worldspace - vertexPosition_worldspace );
     
     vec3 n = TextureNormal_tangentspace;
@@ -48,6 +48,6 @@ void main(void)
     // Specular : reflective highlight, like a mirror
     color  += MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
     
-    out_Color = vec4(MaterialSpecularColor,1);
+    out_Color = vec4(color ,1);
 
 }

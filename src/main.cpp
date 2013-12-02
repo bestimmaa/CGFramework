@@ -146,16 +146,23 @@ void Draw(void)
         normalMatrix.invert();
         normalMatrix.transpose();
 
-        glUniform1i(textureUniformLocation1, 0); //  Specify the value of text uniform variable for the current program object
         
         // transfer NormalMatrix for Geometry 1 to Shaders
         glUniformMatrix4fv(NormalMatrixUniformLocation, 1, GL_FALSE, normalMatrix.data());
         //bind the Geometry
         glBindVertexArray(BufferIds[0]);
         
+        glActiveTexture(GL_TEXTURE0);
         g_texture1->bind();
-        //gloss_texture_earth->bind();
-        //normal_texture_earth->bind();
+        glUniform1i(textureUniformLocation1,0);
+
+        glActiveTexture(GL_TEXTURE1);
+        normal_texture_earth->bind();
+        glUniform1i(NormalMapUniformLocation,1);
+
+        glActiveTexture(GL_TEXTURE2);
+        gloss_texture_earth->bind();
+        glUniform1i(GlossMapUniformLocation,2);
 
         // draw Geometry 1
         glDrawElements(GL_TRIANGLES, mesh->getTriangles().size()*3, GL_UNSIGNED_INT, 0);
@@ -214,10 +221,8 @@ void SetupShader()
         glAttachShader(ShaderIds[0], ShaderIds[2]);
     }
     glLinkProgram(ShaderIds[0]);
-    std::cout << "Max uniforms: " << GL_MAX_VERTEX_UNIFORM_COMPONENTS << std::endl;
+    std::cout << "Max supported uniforms: " << GL_MAX_VERTEX_UNIFORM_COMPONENTS << std::endl;
     
-    CheckErrorsGL("BEFORE\nXXXXXXXXXXXXX\n");
-
     //describes how the uniforms in the shaders are named and to which shader they belong
     ModelViewMatrixUniformLocation  = glGetUniformLocation(ShaderIds[0], "ModelViewMatrix");
     ModelMatrixUniformLocation  = glGetUniformLocation(ShaderIds[0], "ModelMatrix");
@@ -225,10 +230,9 @@ void SetupShader()
     ProjectionMatrixUniformLocation = glGetUniformLocation(ShaderIds[0], "ProjectionMatrix");
     NormalMatrixUniformLocation     = glGetUniformLocation(ShaderIds[0], "NormalMatrix");
     textureUniformLocation1         = glGetUniformLocation(ShaderIds[0], "colorMap");
-    NormalMapUniformLocation = glGetUniformLocation(ShaderIds[0],"NormalMap");
+    NormalMapUniformLocation = glGetUniformLocation(ShaderIds[0],"normalMap");
     GlossMapUniformLocation = glGetUniformLocation(ShaderIds[0],"glossMap");
     LightPositionUniformLocation = glGetUniformLocation(ShaderIds[0],"LightPosition");
-    CheckErrorsGL("AFTER\nXXXXXXXXXXXXX\n");
 
 }
 
@@ -496,7 +500,10 @@ void Initialize(int argc, char* argv[])
     LoadModel();
     
     //Load jpg as texture
+    glActiveTexture(GL_TEXTURE0);
 	g_texture1 = new Texture("earth.jpg");
+    glActiveTexture(GL_TEXTURE1);
     normal_texture_earth = new Texture("earth_normalmap.jpg");
+    glActiveTexture(GL_TEXTURE2);
     gloss_texture_earth = new Texture("earth_glossmap.jpg");
 }

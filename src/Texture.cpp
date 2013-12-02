@@ -33,7 +33,6 @@ Texture::Texture(const std::string& filename):
 
 
 	CheckErrorsGL("Texture::Texture: after glEnable(GL_TEXTURE_2D)");
-    glActiveTexture(GL_TEXTURE0);
 	CheckErrorsGL("Texture::Texture: after glActiveTexture(GL_TEXTURE0)");
 
 	
@@ -62,7 +61,7 @@ Texture::Texture(const std::string& filename):
 
 	CheckErrorsGL("Texture::Texture: after glGenTexture");
 
-	std::cout << std::endl << "      handle: " << _handle;
+	std::cout << std::endl << "      handle: " << _handle << std::endl;
 	//std::cout << std::endl << "      data:   " << FreeImage_GetBits(_bitmap);
 	
     this->unbind();

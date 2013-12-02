@@ -59,5 +59,4 @@ void main(void)
     light_direction_tangentspace = vec4(TBN * vec3(light_direction_cameraspace.xyz),0);
     eye_direction_tangentspace = vec4(TBN * vec3(eye_direction_cameraspace.xyz),0);
     light_position_worldspace = LightPosition.xyz;
-    debug = light_direction_tangentspace.xyz;
 }
