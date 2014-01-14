@@ -81,6 +81,8 @@ Mesh::Mesh():
   _supportedInterleavedComponents(GLOOST_BITMASK_ALL_UNSET),
   _interleavedInfo(),
   _indexRanges(),
+  _tangents(),
+  _bitangents(),
 //  _materials(new ObjMatFile()),
   _boundingBox()
 {
@@ -111,6 +113,8 @@ Mesh::Mesh(Mesh* mesh, bool interleave):
   _supportedInterleavedComponents(GLOOST_BITMASK_ALL_UNSET),
   _interleavedInfo(),
   _indexRanges(),
+    _tangents(),
+    _bitangents(),
   _boundingBox(mesh->_boundingBox.getPMin(), mesh->_boundingBox.getPMax())
 {
 
@@ -131,6 +135,8 @@ Mesh::Mesh(Mesh* mesh, bool interleave):
     _normals    = mesh->_normals;
     _colors     = mesh->_colors;
     _texCoords  = mesh->_texCoords;
+    _tangents   = mesh->_tangents;
+    _bitangents = mesh->_bitangents;
   }
 
   _points    = mesh->_points;
@@ -268,6 +274,16 @@ Mesh::interleave(bool clearComponentArraysAfterwards)
     {
       _texCoords.clear();
     }
+      if (_supportedInterleavedComponents.getFlag(GLOOST_MESH_TANGENTS))
+      {
+          _texCoords.clear();
+      }
+      
+      if (_supportedInterleavedComponents.getFlag(GLOOST_MESH_BITANGENTS))
+      {
+          _texCoords.clear();
+      }
+    
   }
 }
 
@@ -281,7 +297,7 @@ Mesh::interleave(bool clearComponentArraysAfterwards)
 */
 
 void
-Mesh::interleaveFromOtherMesh(Mesh* mesh)
+Mesh::interleaveFromOtherMesh(Mesh* mesh) //TODO
 {
 
   _supportedInterleavedComponents.setFlags(gloost::BitMask(GLOOST_BITMASK_ALL_SET), false);
@@ -309,6 +325,17 @@ Mesh::interleaveFromOtherMesh(Mesh* mesh)
     {
       setSupportedInterleavedAttribute(GLOOST_MESH_TEXCOORDS, true);
     }
+      
+    if (mesh->_vertices.size() == mesh->_tangents.size()){
+        setSupportedInterleavedAttribute(GLOOST_MESH_TANGENTS, true);
+
+    }
+      
+    if (mesh->_vertices.size() == mesh->_bitangents.size()){
+        setSupportedInterleavedAttribute(GLOOST_MESH_BITANGENTS, true);
+    }
+      
+      
 
     _interleavedAttributes.clear();
 
@@ -337,6 +364,19 @@ Mesh::interleaveFromOtherMesh(Mesh* mesh)
         _interleavedAttributes.push_back(mesh->_texCoords[i][0]);
         _interleavedAttributes.push_back(mesh->_texCoords[i][1]);
       }
+        if (_supportedInterleavedComponents.getFlag(GLOOST_MESH_TANGENTS))
+        {
+            _interleavedAttributes.push_back(mesh->_tangents[i][0]);
+            _interleavedAttributes.push_back(mesh->_tangents[i][1]);
+            _interleavedAttributes.push_back(mesh->_tangents[i][2]);
+
+        }
+        if (_supportedInterleavedComponents.getFlag(GLOOST_MESH_BITANGENTS))
+        {
+            _interleavedAttributes.push_back(mesh->_bitangents[i][0]);
+            _interleavedAttributes.push_back(mesh->_bitangents[i][1]);
+            _interleavedAttributes.push_back(mesh->_bitangents[i][2]);
+        }
     }
   }
 
@@ -1274,6 +1314,24 @@ Mesh::updateMeshInfo()
     componentStride += GLOOST_MESH_SIZEOF_TEXCOORD;
   }
 
+  if (isInterleavedAttributeSupported(GLOOST_MESH_TANGENTS))
+    {
+        _interleavedInfo.interleavedTangentOffset = componentOffset;
+        _interleavedInfo.interleavedTangentStride = componentStride;
+        
+        componentOffset += GLOOST_MESH_NUM_COMPONENTS_TANGENTS;
+        componentStride += GLOOST_MESH_SIZEOF_TANGENT;
+    }
+    
+    if (isInterleavedAttributeSupported(GLOOST_MESH_BITANGENTS))
+    {
+        _interleavedInfo.interleavedBitangentOffset = componentOffset;
+        _interleavedInfo.interleavedBitangentStride = componentStride;
+        
+        componentOffset += GLOOST_MESH_NUM_COMPONENTS_BITANGENTS;
+        componentStride += GLOOST_MESH_SIZEOF_BITANGENT;
+    }
+
   _interleavedInfo.interleavedPackageSize   = componentOffset;
   _interleavedInfo.interleavedPackageStride = componentStride;
 }
@@ -1325,7 +1383,75 @@ Mesh::printMeshInfo() const
 ////////////////////////////////////////////////////////////////////////////////
 
 
+void
+Mesh::generateTangentsBitangents() {
+    _tangents.clear();
+    _bitangents.clear();
+    normalizeNormals();
+    
+    std::vector<gloost::Vector3> tan1(_vertices.size());
+    std::vector<gloost::Vector3> tan2(_vertices.size());
+    gloost::Vector3 tangent;
+    gloost::Vector3 bitangent;
+    
+    for(int i = 0; i < this->getTriangles().size(); ++i){
+        
+        int i1 = getTriangles().operator[](i).vertexIndices[0];
+        int i2 = getTriangles().operator[](i).vertexIndices[1];
+        int i3 = getTriangles().operator[](i).vertexIndices[2];
+        
+        gloost::Point3 v1 = _vertices[i1];
+        gloost::Point3 v2 = _vertices[i2];
+        gloost::Point3 v3 = _vertices[i3];
+        
+        gloost::Point3 w1 = _texCoords[i1];
+        gloost::Point3 w2 = _texCoords[i2];
+        gloost::Point3 w3 = _texCoords[i3];
+        
+        float x1 = v2[0] - v1[0]; float x2 = v3[0] - v1[0]; float y1 = v2[1] - v1[1]; float y2 = v3[1] - v1[1]; float z1 = v2[2] - v1[2]; float z2 = v3[2] - v1[2];
+        
+        
+        float s1 = w2[0] - w1[0]; float s2 = w3[0] - w1[0]; float t1 = w2[1] - w1[1]; float t2 = w3[1] - w1[1];
+        
+        float r = 1.0F / (s1 * t2 - s2 * t1);
+        
+        gloost::Vector3 sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
+                             (t2 * z1 - t1 * z2) * r);
+        gloost::Vector3 tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
+             (s1 * z2 - s2 * z1) * r);
+        
+        tan1[i1] += sdir;
+        tan1[i2] += sdir;
+        tan1[i3] += sdir;
+        tan2[i1] += tdir;
+        tan2[i2] += tdir;
+        tan2[i3] += tdir;
+        
+        
+    }
+    
+    for (int a = 0; a < _vertices.size(); ++a){
+        gloost::Vector3 &n = _normals[a];
+        gloost::Vector3 &t = tan1[a];
+        
+        tangent = (t-n*(n*t));
+        tangent[3] = ((gloost::cross(n,t)*tan2[a])<0.0f) ? -1.0f : 1.0f;
+        tangent.normalize();
+        
+        //std::cout<<"tangent "<<tangent[0]<<" "<<tangent[1]<<" "<<tangent[2]<<std::endl;
+        
+        _tangents.push_back(tangent);
+        
+        bitangent = (gloost::cross(_normals[a], tangent)*tangent[3]);
 
+        _bitangents.push_back(bitangent);
+        
+
+        
+    }
+    
+    std::cout<<"generated "<<_tangents.size() << " tangents and " << _bitangents.size() << " bitangents" << std::endl;
+}
 
 
 } // namespace gloost
