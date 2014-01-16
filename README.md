@@ -1,8 +1,9 @@
 CGFramework
 ===========
-Computer Graphics - Winter course 2013 / 2014 - Bauhaus University Weimar
 
-[website of the course](http://www.uni-weimar.de/de/medien/professuren/grafische-datenverarbeitung/lehre/computergrafik/). 
+This repository provides the material for the following course:
+
+[Computer Graphics - Winter course 2013 / 2014 - Bauhaus University Weimar](http://www.uni-weimar.de/de/medien/professuren/grafische-datenverarbeitung/lehre/computergrafik/). 
 
 You can find possible solutions for the assigments at the [release page](https://github.com/bestimmaa/CGFramework/releases)
 
