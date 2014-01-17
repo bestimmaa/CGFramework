@@ -1,8 +1,11 @@
 CGFramework
 ===========
-Computer Graphics - Winter course 2013 / 2014 - Bauhaus University Weimar
 
-A version for Visual Studio on Windows can be downloaded at the [website of the course](http://www.uni-weimar.de/de/medien/professuren/grafische-datenverarbeitung/lehre/computergrafik/). 
+This repository provides the material for the following course:
+
+[Computer Graphics - Winter course 2013 / 2014 - Bauhaus University Weimar](http://www.uni-weimar.de/de/medien/professuren/grafische-datenverarbeitung/lehre/computergrafik/). 
+
+You can find possible solutions for the assigments at the [release page](https://github.com/bestimmaa/CGFramework/releases)
 
 The slides from the Q&A session and additional material can be found in the [wiki section](https://github.com/bestimmaa/CGFramework/wiki)
 ##Structure of the framework
